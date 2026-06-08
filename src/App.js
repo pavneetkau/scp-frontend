@@ -5,20 +5,21 @@ function App() {
   const [scps, setScps] = useState([]);
 
   useEffect(() => {
-    async function fetchScps() {
-      const { data, error } = await supabase
-        .from("scps")
-        .select("*");
-
-      if (error) {
-        console.log(error);
-      } else {
-        setScps(data);
-      }
-    }
-
-    fetchScps();
+    getScps();
   }, []);
+
+  async function getScps() {
+    const { data, error } = await supabase
+      .from("scps")
+      .select("*")
+      .order("id", { ascending: true });
+
+    if (error) {
+      console.log("Supabase error:", error);
+    } else {
+      setScps(data);
+    }
+  }
 
   return (
     <div style={{ padding: "20px" }}>
