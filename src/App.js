@@ -3,7 +3,13 @@ import { supabase } from "./supabase";
 
 function App() {
   const [scps, setScps] = useState([]);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [form, setForm] = useState({
+    item: "",
+    class: "",
+    description: "",
+    containment: "",
+  });
+  const [editId, setEditId] = useState(null);
 
   useEffect(() => {
     fetchScps();
@@ -15,22 +21,61 @@ function App() {
       .select("*")
       .order("id", { ascending: true });
 
-    if (error) {
-      console.log("Supabase error:", error.message);
-      setErrorMsg(error.message);
+    if (!error) setScps(data);
+  }
+
+  function handleChange(e) {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    if (editId) {
+      await supabase.from("scps").update(form).eq("id", editId);
+      setEditId(null);
     } else {
-      console.log("Supabase data:", data);
-      setScps(data);
+      await supabase.from("scps").insert([form]);
     }
+
+    setForm({ item: "", class: "", description: "", containment: "" });
+    fetchScps();
+  }
+
+  function handleEdit(scp) {
+    setEditId(scp.id);
+    setForm({
+      item: scp.item,
+      class: scp.class,
+      description: scp.description,
+      containment: scp.containment,
+    });
+  }
+
+  async function handleDelete(id) {
+    await supabase.from("scps").delete().eq("id", id);
+    fetchScps();
   }
 
   return (
     <div style={{ padding: "20px" }}>
       <h1>SCP Database</h1>
 
-      {errorMsg && <p style={{ color: "red" }}>Error: {errorMsg}</p>}
+      <form onSubmit={handleSubmit} style={{ marginBottom: "30px" }}>
+        <input name="item" placeholder="Item" value={form.item} onChange={handleChange} required />
+        <br /><br />
 
-      {scps.length === 0 && <p>No SCP records found.</p>}
+        <input name="class" placeholder="Class" value={form.class} onChange={handleChange} required />
+        <br /><br />
+
+        <textarea name="description" placeholder="Description" value={form.description} onChange={handleChange} required />
+        <br /><br />
+
+        <textarea name="containment" placeholder="Containment" value={form.containment} onChange={handleChange} required />
+        <br /><br />
+
+        <button type="submit">{editId ? "Update SCP" : "Add SCP"}</button>
+      </form>
 
       {scps.map((scp) => (
         <div
@@ -45,6 +90,11 @@ function App() {
           <p><b>Class:</b> {scp.class}</p>
           <p><b>Description:</b> {scp.description}</p>
           <p><b>Containment:</b> {scp.containment}</p>
+
+          <button onClick={() => handleEdit(scp)}>Edit</button>
+          <button onClick={() => handleDelete(scp.id)} style={{ marginLeft: "10px" }}>
+            Delete
+          </button>
         </div>
       ))}
     </div>
