@@ -3,20 +3,23 @@ import { supabase } from "./supabase";
 
 function App() {
   const [scps, setScps] = useState([]);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    getScps();
+    fetchScps();
   }, []);
 
-  async function getScps() {
+  async function fetchScps() {
     const { data, error } = await supabase
       .from("scps")
       .select("*")
       .order("id", { ascending: true });
 
     if (error) {
-      console.log("Supabase error:", error);
+      console.log("Supabase error:", error.message);
+      setErrorMsg(error.message);
     } else {
+      console.log("Supabase data:", data);
       setScps(data);
     }
   }
@@ -24,6 +27,10 @@ function App() {
   return (
     <div style={{ padding: "20px" }}>
       <h1>SCP Database</h1>
+
+      {errorMsg && <p style={{ color: "red" }}>Error: {errorMsg}</p>}
+
+      {scps.length === 0 && <p>No SCP records found.</p>}
 
       {scps.map((scp) => (
         <div
