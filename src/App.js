@@ -1,22 +1,32 @@
 import React, { useEffect, useState } from "react";
- 
+import { supabase } from "./supabase";
+
 function App() {
   const [scps, setScps] = useState([]);
- 
+
   useEffect(() => {
-    fetch("http://localhost:5000/api/scps")
-      .then((res) => res.json())
-      .then((data) => setScps(data))
-      .catch((err) => console.log(err));
+    async function fetchScps() {
+      const { data, error } = await supabase
+        .from("scps")
+        .select("*");
+
+      if (error) {
+        console.log(error);
+      } else {
+        setScps(data);
+      }
+    }
+
+    fetchScps();
   }, []);
- 
+
   return (
     <div style={{ padding: "20px" }}>
       <h1>SCP Database</h1>
- 
+
       {scps.map((scp) => (
         <div
-          key={scp._id}
+          key={scp.id}
           style={{
             border: "1px solid black",
             margin: "10px",
@@ -32,5 +42,5 @@ function App() {
     </div>
   );
 }
- 
+
 export default App;
